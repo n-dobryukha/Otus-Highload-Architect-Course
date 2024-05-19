@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="https://www.thymeleaf.org">
+<head>
+    <title>Sign up</title>
+    <!--/*/ <th:block th:insert="~{fragments/header :: header}"/> /*/-->
+</head>
+<body>
+<div class="container">
+    <form class="form-signin w-50" method="post" action="#" th:action="@{ /user/register }">
+        <h2 class="form-signin-heading">Please sign up</h2>
+        <p>
+        <div class="form-floating">
+            <input type="text" class="form-control" id="floatingFirstName" name="first_name" placeholder="First name" autofocus>
+            <label for="floatingFirstName">First name</label>
+        </div>
+        </p>
+        <p>
+        <div class="form-floating">
+            <input type="text" class="form-control" id="floatingSecondName" name="second_name" placeholder="Second name">
+            <label for="floatingSecondName">Second name</label>
+        </div>
+        </p>
+        <p>
+        <div class="form-floating">
+            <input type="date" class="form-control" id="floatingBirthdate" name="birthdate" placeholder="Birthdate">
+            <label for="floatingBirthdate">Birthdate</label>
+        </div>
+        </p>
+        <p>
+        <div class="form-floating">
+            <input type="text" class="form-control" id="floatingBiography" name="biography" placeholder="Biography">
+            <label for="floatingBiography">Biography</label>
+        </div>
+        </p>
+        <p>
+        <div class="form-floating">
+            <input type="text" class="form-control" id="floatingCity" name="city" placeholder="City">
+            <label for="floatingCity">City</label>
+        </div>
+        </p>
+        <p>
+        <div class="form-floating">
+            <input type="password" class="form-control" id="floatingPassword" name="password" placeholder="Password">
+            <label for="floatingPassword">Password</label>
+        </div>
+        </p>
+        <button class="btn btn-primary w-100" type="submit">Sign up</button>
+        <div id="login_group" class="input-group invisible">
+            <input type="text" id="uuid" name="uuid" class="form-control" placeholder="UUID" disabled/>
+            <button class="btn btn-outline-primary" type="button" onclick="copyToClipboard()">copy</button>
+            <a class="btn btn-link" th:href="@{ /login }">Sign in</a>
+        </div>
+    </form>
+
+    <!--form class="form-signin" method="post" th:action="@{ /user/register }">
+        <h2 class="form-signin-heading">Please sign up</h2>
+        <p>
+            <label for="first_name" class="sr-only">First name</label>
+            <input type="text" id="first_name" name="first_name" class="form-control" placeholder="First name" autofocus>
+        </p>
+        <p>
+            <label for="second_name" class="sr-only">Second name</label>
+            <input type="text" id="second_name" name="second_name" class="form-control" placeholder="Second name">
+        </p>
+        <p>
+            <label for="birthdate" class="sr-only">Date of birth</label>
+            <input type="date" id="birthdate" name="birthdate" class="form-control" placeholder="Date of birth">
+        </p>
+        <p>
+            <label for="biography" class="sr-only">Biography</label>
+            <input type="text" id="biography" name="biography" class="form-control" placeholder="Biography">
+        </p>
+        <p>
+            <label for="city" class="sr-only">City</label>
+            <input type="text" id="city" name="city" class="form-control" placeholder="City">
+        </p>
+        <p>
+            <label for="password" class="sr-only">Password</label>
+            <input type="password" id="password" name="password" class="form-control" placeholder="Password">
+        </p>
+        <p>
+            <button class="btn btn-lg btn-primary btn-block" type="submit">Sign up</button>
+        </p>
+        <div id="login_group" class="input-group invisible">
+            <input type="text" id="uuid" name="uuid" class="form-control" placeholder="UUID" disabled/>
+            <button class="btn btn-outline-primary" type="button" onclick="copyToClipboard()">copy</button>
+            <a class="btn btn-link" th:href="@{ /login }">Sign in</a>
+        </div>
+
+    </form-->
+</div>
+<script>
+    function handleSubmit(event) {
+        event.preventDefault();
+
+        const data = new FormData(event.target);
+
+        const value = Object.fromEntries(data.entries());
+
+        fetch(event.target.action, {
+            method: event.target.method,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(value)
+        }).then(response => response.json()
+        ).then(data => {
+            document.getElementById("uuid").value = data.user_id;
+            document.getElementById("login_group").classList.remove("invisible");
+        }).catch(error => {
+            console.error(error);
+        });
+
+    }
+
+    function copyToClipboard() {
+        const uuid = document.getElementById("uuid");
+        const copyText = document.createElement("textarea");
+        copyText.textContent = uuid.value;
+        copyText.style.position = "fixed";
+        document.body.appendChild(copyText);
+        copyText.focus();
+        copyText.select();
+        try {
+            navigator.clipboard.writeText(copyText.value);
+        } catch (ex) {
+            console.warn("Copy to clipboard failed.", ex);
+            return prompt("Copy to clipboard: Ctrl+C, Enter", text);
+        } finally {
+            document.body.removeChild(copyText);
+        }
+    }
+
+    const form = document.querySelector("form");
+    form.addEventListener("submit", handleSubmit);
+</script>
+</body>
+<!--/*/ <th:block th:insert="~{fragments/footer :: footer}"/> /*/-->
+</html>

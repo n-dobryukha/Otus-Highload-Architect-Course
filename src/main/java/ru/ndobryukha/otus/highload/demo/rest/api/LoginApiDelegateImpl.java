@@ -26,19 +26,12 @@ public class LoginApiDelegateImpl implements LoginApiDelegate {
     private final JwtService jwtService;
 
     @Override
-    public Mono<ResponseEntity<LoginPost200Response>> loginPost(Mono<LoginPostRequest> request, ServerWebExchange exchange) {
+    public Mono<LoginPost200Response> loginPost(Mono<LoginPostRequest> request, ServerWebExchange exchange) {
         return request.flatMap(it -> userDetailsService.findByUsername(it.getId())
                     .filter(u -> passwordEncoder.matches(it.getPassword(), u.getPassword()))
                 )
                 .map(jwtService::generateToken)
-                .flatMap(token -> exchange.getSession()
-                        .map(webSession -> Optional.ofNullable(webSession.getAttribute("SPRING_SECURITY_SAVED_REQUEST"))                                     .map(String::valueOf)
-                                .map(location -> ResponseEntity.ok().location(URI.create(location)))
-                                .orElseGet(ResponseEntity::ok)
-                                .header(HttpHeaders.SET_COOKIE, "ACCESS_TOKEN=" + token)
-                                .body(new LoginPost200Response().token(token))
-                        )
-                )
+                .map(token -> LoginPost200Response.builder().token(token).build())
                 .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED)));
     }
 

@@ -1,0 +1,29 @@
+volumes:
+  postgres-data:
+    external: false
+
+services:
+  postgresql:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: highload_architect
+      POSTGRES_USER: architect
+      POSTGRES_PASSWORD: Passw00rd!
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "6432:5432"
+  demo:
+    depends_on:
+      - postgresql
+    image: highload-architect-demo
+    environment:
+      DB_HOST: postgresql
+      DB_PORT: 5432
+      DB_NAME: highload_architect
+      DB_SCHEMA: demo
+      DB_USERNAME: architect
+      DB_PASSWORD: Passw00rd!
+    ports:
+      - "8090:8080"

@@ -1,0 +1,18 @@
+
+application:
+  db:
+    host: localhost
+    port: 6432
+    name: highload_architect
+    schema: demo
+    username: architect
+    password: Passw00rd!
+
+spring:
+  liquibase.contexts: init_data
+
+logging:
+  level:
+    org.springframework.r2dbc: trace
+server:
+  port: 8090

@@ -1,0 +1,38 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>User Details</title>
+    <!--/*/ <th:block th:insert="~{fragments/header :: header}"/> /*/-->
+</head>
+<body id="samples">
+<div th:replace="~{fragments/menu :: menu}"></div>
+
+<div id="content" class="container">
+
+    <div>
+        <h2>User Profile</h2>
+    </div>
+
+    <dl class="row">
+        <dt class="col-sm-3">User id</dt>
+        <dd class="col-sm-9" th:text="${user.id}"></dd>
+
+        <dt class="col-sm-3">First name</dt>
+        <dd class="col-sm-9" th:text="${user.firstName}"></dd>
+
+        <dt class="col-sm-3">Second name</dt>
+        <dd class="col-sm-9" th:text="${user.secondName}"></dd>
+
+        <dt class="col-sm-3">Birth date</dt>
+        <dd class="col-sm-9" th:text="${user.birthdate}"></dd>
+
+        <dt class="col-sm-3">Biography</dt>
+        <dd class="col-sm-9" th:text="${user.biography}"></dd>
+
+        <dt class="col-sm-3">City</dt>
+        <dd class="col-sm-9" th:text="${user.city}"></dd>
+    </dl>
+
+</div>
+</body>
+<!--/*/ <th:block th:insert="~{fragments/footer :: footer}"/> /*/-->
+</html>

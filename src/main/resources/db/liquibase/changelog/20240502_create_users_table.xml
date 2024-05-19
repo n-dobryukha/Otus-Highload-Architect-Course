@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
+
+    <changeSet id="20240502-create-users-table" author="n.dobryukha">
+        <preConditions>
+            <not>
+                <tableExists tableName="users"/>
+            </not>
+        </preConditions>
+        <sql>
+            CREATE TABLE users (
+                id          uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
+                first_name  varchar(255),
+                second_name varchar(255),
+                birthdate   date,
+                biography   text,
+                city        varchar(255),
+                password    text
+            );
+
+            COMMENT ON TABLE  users IS 'Пользователи';
+            COMMENT ON COLUMN users.id IS 'id пользователя';
+            COMMENT ON COLUMN users.first_name IS 'имя пользователя';
+            COMMENT ON COLUMN users.second_name IS 'фамилия пользователя';
+            COMMENT ON COLUMN users.birthdate IS 'дата рождения пользователя';
+            COMMENT ON COLUMN users.biography IS 'биография пользователя';
+            COMMENT ON COLUMN users.city IS 'город пользователя';
+            COMMENT ON COLUMN users.password IS 'хэш пароля пользователя';
+        </sql>
+    </changeSet>
+</databaseChangeLog>

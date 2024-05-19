@@ -1,4 +1,29 @@
-spring.application.name: demo
+application:
+  db:
+    host: ${DB_HOST}
+    port: ${DB_PORT}
+    name: ${DB_NAME}
+    schema: ${DB_SCHEMA}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+spring:
+  application.name: demo
+  r2dbc:
+    url: r2dbc:postgresql://${application.db.host}:${application.db.port}/${application.db.name}?currentSchema=${application.db.schema}
+    username: ${application.db.username}
+    password: ${application.db.password}
+  liquibase:
+    default-schema: ${application.db.schema}
+    liquibase-schema: ${application.db.schema}
+    change-log: classpath:db/liquibase/master.xml
+    url: jdbc:postgresql://${application.db.host}:${application.db.port}/${application.db.name}?currentSchema=${application.db.schema}
+    user: ${application.db.username}
+    password: ${application.db.password}
+
+preliquibase:
+  enabled: true
+  sqlScriptReferences: classpath:db/preliquibase/default.sql
 
 jwt:
   token-expiration-seconds: 1800
