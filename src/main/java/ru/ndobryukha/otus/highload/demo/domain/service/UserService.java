@@ -9,6 +9,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import ru.ndobryukha.otus.highload.demo.domain.mapper.UserMapper;
 import ru.ndobryukha.otus.highload.demo.domain.repository.UserRepository;
@@ -57,6 +58,11 @@ public class UserService implements ReactiveUserDetailsService {
                 .map(r -> mapper.map(r, passwordEncoder))
                 .flatMap(repository::save)
                 .map(id -> UserRegisterPost200Response.builder().userId(id.toString()).build());
+    }
+
+    public Flux<User> search(String firstName, String lastName) {
+        return repository.search(firstName, lastName)
+                .map(mapper::map);
     }
 
 }

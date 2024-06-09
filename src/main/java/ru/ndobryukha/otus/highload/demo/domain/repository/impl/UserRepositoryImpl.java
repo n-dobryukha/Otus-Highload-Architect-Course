@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Repository;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import ru.ndobryukha.otus.highload.demo.domain.model.User;
 import ru.ndobryukha.otus.highload.demo.domain.repository.UserRepository;
@@ -48,14 +49,26 @@ public class UserRepositoryImpl implements UserRepository {
                             VALUES (:firstName, :secondName, :birthdate, :biography, :city, :password)
                         """)
                 .filter((statement, executeFunction) -> statement.returnGeneratedValues("id").execute())
-                .bind("firstName", user.firstName())
-                .bind("secondName", user.secondName())
+                .bind("firstName", Parameters.in(R2dbcType.VARCHAR, user.firstName()))
+                .bind("secondName", Parameters.in(R2dbcType.VARCHAR, user.secondName()))
                 .bind("birthdate", Parameters.in(R2dbcType.DATE, user.birthdate()))
-                .bind("biography", user.biography())
-                .bind("city", user.city())
-                .bind("password", user.password())
+                .bind("biography", Parameters.in(R2dbcType.VARCHAR, user.biography()))
+                .bind("city", Parameters.in(R2dbcType.VARCHAR, user.city()))
+                .bind("password", Parameters.in(R2dbcType.VARCHAR, user.password()))
                 .fetch()
                 .first()
                 .map(r -> (UUID) r.get("id"));
+    }
+
+    @Override
+    public Flux<User> search(String firstName, String secondName) {
+        return client.sql("""
+                            SELECT * FROM users
+                            WHERE first_name LIKE :firstName and second_name LIKE :secondName
+                        """)
+                .bind("firstName", firstName + "%")
+                .bind("secondName", secondName + "%")
+                .map(MAPPING_FUNCTION)
+                .all();
     }
 }

@@ -10,3 +10,4 @@
 ## Homeworks
 
 ### [01. The high load problems.](docs/homework/01/README.md)
+### [02. Indexes: querying optimization.](docs/homework/02/README.md)
