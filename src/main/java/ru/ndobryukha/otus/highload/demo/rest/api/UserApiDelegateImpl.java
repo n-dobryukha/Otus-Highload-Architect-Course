@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebExchange;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import ru.ndobryukha.otus.highload.demo.domain.service.UserService;
 import ru.ndobryukha.otus.highload.demo.rest.model.User;
@@ -26,5 +27,10 @@ public class UserApiDelegateImpl implements UserApiDelegate {
     @Override
     public Mono<UserRegisterPost200Response> userRegisterPost(Mono<UserRegisterPostRequest> request, ServerWebExchange exchange) {
         return userService.register(request);
+    }
+
+    @Override
+    public Flux<User> userSearchGet(String firstName, String lastName, ServerWebExchange exchange) {
+        return userService.search(firstName, lastName);
     }
 }
