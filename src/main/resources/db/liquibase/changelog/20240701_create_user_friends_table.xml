@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
+
+    <changeSet id="20240701-create-user_friends-table" author="n.dobryukha">
+        <preConditions>
+            <not>
+                <tableExists tableName="user_friends"/>
+            </not>
+        </preConditions>
+        <sql>
+            CREATE TABLE user_friends (
+                user_id      uuid NOT NULL REFERENCES users (id),
+                friend_id    uuid NOT NULL references users (id),
+                PRIMARY KEY(user_id, friend_id)
+            );
+
+            COMMENT ON TABLE  user_friends IS 'Друзья';
+            COMMENT ON COLUMN user_friends.user_id IS 'id пользователя';
+            COMMENT ON COLUMN user_friends.friend_id IS 'id друга';
+        </sql>
+    </changeSet>
+</databaseChangeLog>
