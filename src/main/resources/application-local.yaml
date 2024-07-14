@@ -5,14 +5,15 @@ application:
     port: 6432
     name: highload_architect
     schema: demo
-    username: architect
+    username: postgres
     password: Passw00rd!
+    replicas: localhost:6433,localhost:6434
 
 spring:
   liquibase.contexts: init_data
 
-logging:
-  level:
-    org.springframework.r2dbc: trace
+#logging:
+#  level:
+#    org.springframework.r2dbc: trace
 server:
   port: 8090

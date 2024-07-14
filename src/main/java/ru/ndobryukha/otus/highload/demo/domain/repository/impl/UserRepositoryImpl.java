@@ -4,10 +4,11 @@ import io.r2dbc.spi.Parameters;
 import io.r2dbc.spi.R2dbcType;
 import io.r2dbc.spi.Row;
 import io.r2dbc.spi.RowMetadata;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import ru.ndobryukha.otus.highload.demo.domain.model.User;
@@ -18,7 +19,6 @@ import java.util.UUID;
 import java.util.function.BiFunction;
 
 @Repository
-@RequiredArgsConstructor
 @Slf4j
 public class UserRepositoryImpl implements UserRepository {
 
@@ -32,19 +32,29 @@ public class UserRepositoryImpl implements UserRepository {
             .password(row.get("password", String.class))
             .build();
 
-    private final DatabaseClient client;
+    private final DatabaseClient masterDatabaseClient;
+    private final DatabaseClient replicasDatabaseClient;
+
+    public UserRepositoryImpl(
+            @Qualifier("masterDatabaseClient") DatabaseClient masterDatabaseClient,
+            @Qualifier("replicasDatabaseClient") DatabaseClient replicasDatabaseClient) {
+        this.masterDatabaseClient = masterDatabaseClient;
+        this.replicasDatabaseClient = replicasDatabaseClient;
+    }
 
     @Override
+    @Transactional(readOnly = true)
     public Mono<User> findById(UUID id) {
-        return client.sql("SELECT * from users WHERE id = :id")
+        return replicasDatabaseClient.sql("SELECT * from users WHERE id = :id")
                 .bind("id", id)
                 .map(MAPPING_FUNCTION)
                 .one();
     }
 
     @Override
+    @Transactional
     public Mono<UUID> save(User user) {
-        return client.sql("""
+        return masterDatabaseClient.sql("""
                             INSERT INTO users (first_name, second_name, birthdate, biography, city, password)
                             VALUES (:firstName, :secondName, :birthdate, :biography, :city, :password)
                         """)
@@ -61,8 +71,9 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Flux<User> search(String firstName, String secondName) {
-        return client.sql("""
+        return replicasDatabaseClient.sql("""
                             SELECT * FROM users
                             WHERE first_name LIKE :firstName and second_name LIKE :secondName
                         """)

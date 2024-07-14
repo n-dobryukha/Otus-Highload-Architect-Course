@@ -6,6 +6,7 @@ application:
     schema: ${DB_SCHEMA}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
+    replicas: ${DB_REPLICA_URLS}
 
 spring:
   application.name: demo
@@ -13,6 +14,10 @@ spring:
     url: r2dbc:postgresql://${application.db.host}:${application.db.port}/${application.db.name}?currentSchema=${application.db.schema}
     username: ${application.db.username}
     password: ${application.db.password}
+#    replicas:
+#      url: r2dbc:postgresql://${application.db.replicas}/${application.db.name}?currentSchema=${application.db.schema}
+#      username: ${application.db.username}
+#      password: ${application.db.password}
   liquibase:
     default-schema: ${application.db.schema}
     liquibase-schema: ${application.db.schema}

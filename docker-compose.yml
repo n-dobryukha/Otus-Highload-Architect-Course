@@ -1,29 +1,210 @@
+x-postgresql-common:
+  &postgresql-common
+  image: postgres:15
+  user: postgres
+  restart: always
+  healthcheck:
+    test: 'pg_isready -U postgres --dbname=postgres'
+    interval: 10s
+    timeout: 5s
+    retries: 5
+
 volumes:
-  postgres-data:
-    external: false
+  postgresql-master:
 
 services:
-  postgresql:
-    image: postgres:15
+  postgresql-master:
+    <<: *postgresql-common
+    container_name: postgresql-master
+    ports:
+      - 6432:5432
     environment:
       POSTGRES_DB: highload_architect
-      POSTGRES_USER: architect
+#      POSTGRES_USER: architect
       POSTGRES_PASSWORD: Passw00rd!
-      PGDATA: /var/lib/postgresql/data/pgdata
+      PGDATA: "/var/lib/postgresql/data/pgdata"
+    user: 0:0
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - postgresql-master:/var/lib/postgresql/data
+      - ./configs/postgresql/00_init.sql:/docker-entrypoint-initdb.d/00_init.sql
+#    network_mode: bridge
+#    command: |
+#      postgres
+#      -c synchronous_commit='off'
+#      -c synchronous_standby_names='FIRST 1 (postgresql_replica_1, postgresql_replica_2)'
+  postgresql-replica-1:
+    <<: *postgresql-common
+    container_name: postgresql-replica-1
+    hostname: postgresql-replica-1
     ports:
-      - "6432:5432"
-  demo:
+      - 6433:5432
+    environment:
+      POSTGRES_DB: highload_architect
+      #      POSTGRES_USER: architect
+      POSTGRES_PASSWORD: Passw00rd!
+      PGDATA: "/var/lib/postgresql/data/pgdata"
+    volumes:
+      - ./configs/postgresql/replica-1:/var/lib/postgresql/data
+#    network_mode: bridge
     depends_on:
-      - postgresql
+      - postgresql-master
+#    command: |
+#      bash -c "
+#      until pg_basebackup -h postgresql-master -D /var/lib/postgresql/data/pgdata -U replicator -v -P --wal-method=stream
+#      do
+#      echo 'Waiting for primary to connect...'
+#      sleep 1s
+#      done
+#      echo 'Backup done, starting replica...'
+#      chmod 0700 /var/lib/postgresql/data/pgdata
+#      postgres
+#      "
+  postgresql-replica-2:
+    <<: *postgresql-common
+    container_name: postgresql-replica-2
+    hostname: postgresql-replica-2
+    ports:
+      - 6434:5432
+    environment:
+      POSTGRES_DB: highload_architect
+      #      POSTGRES_USER: architect
+      POSTGRES_PASSWORD: Passw00rd!
+      PGDATA: "/var/lib/postgresql/data/pgdata"
+    volumes:
+      - ./configs/postgresql/replica-2:/var/lib/postgresql/data
+#    network_mode: bridge
+    depends_on:
+      - postgresql-master
+#    command: |
+#      bash -c "
+#      until pg_basebackup -h postgresql-replica-1 -D /var/lib/postgresql/data/pgdata -U replicator -v -P --wal-method=stream
+#      do
+#      echo 'Waiting for primary to connect...'
+#      sleep 1s
+#      done
+#      echo 'Backup done, starting replica...'
+#      chmod 0700 /var/lib/postgresql/data/pgdata
+#      postgres
+#      "
+  cadvisor:
+    image: google/cadvisor
+    hostname: cadvisor
+    volumes:
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    ports:
+      - 8088:8080
+
+#  postgresql-master:
+#    <<: *postgresql-common
+#    container_name: postgresql-master
+#    ports:
+#      - 6432:5432
+#    environment:
+#      POSTGRES_DB: highload_architect
+#      POSTGRES_USER: architect
+#      POSTGRES_PASSWORD: Passw00rd!
+#      PGDATA: "/var/lib/postgresql/data/pgdata"
+#    volumes:
+#      - ./configs/postgresql/master:/var/lib/postgresql/data
+#      - ./configs/postgresql/00_init.sql:/docker-entrypoint-initdb.d/00_init.sql
+#  postgresql-replica:
+#    <<: *postgresql-common
+#    container_name: postgresql-replica
+#    ports:
+#      - 6433:5432
+#    environment:
+#      POSTGRES_USER: architect
+#      POSTGRES_PASSWORD: Passw00rd!
+#      PGDATA: "/var/lib/postgresql/data/pgdata"
+#    volumes:
+#      - ./configs/postgresql/replica:/var/lib/postgresql/data
+
+
+#  postgresql-master:
+#    <<: *postgresql-common
+#    container_name: postgresql-master
+#    ports:
+#      - 6432:5432
+#    environment:
+#      POSTGRES_DB: highload_architect
+#      POSTGRES_USER: architect
+#      POSTGRES_PASSWORD: Passw00rd!
+#      POSTGRES_HOST_AUTH_METHOD: "scram-sha-256\nhost replication all 0.0.0.0/0 md5"
+#      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
+#    command: |
+#      postgres
+#      -c wal_level=replica
+#      -c hot_standby=on
+#      -c max_wal_senders=10
+#      -c max_replication_slots=10
+#      -c hot_standby_feedback=on
+#    volumes:
+#      - ./configs/postgresql/00_init.sql:/docker-entrypoint-initdb.d/00_init.sql
+#
+#  postgresql-replica:
+#    <<: *postgresql-common
+#    container_name: postgresql-replica
+#    ports:
+#      - 6433:5432
+#    environment:
+#      PGUSER: replicator
+#      PGPASSWORD: replicator_password
+#    command: |
+#      bash -c "
+#      until pg_basebackup --pgdata=/var/lib/postgresql/data -R --slot=replication_slot --host=postgresql-master --port=5432
+#      do
+#      echo 'Waiting for primary to connect...'
+#      sleep 1s
+#      done
+#      echo 'Backup done, starting replica...'
+#      chmod 0700 /var/lib/postgresql/data
+#      postgres
+#      "
+#    depends_on:
+#      - postgresql-master
+  postgresql-exporter:
+    container_name: postgresql-exporter
+    image: prometheuscommunity/postgres-exporter:v0.15.0
+    environment:
+      DATA_SOURCE_NAME: postgresql://architect:Passw00rd!@postgresql-master:5432/highload_architect?sslmode=disable
+    ports:
+      - 9187:9187
+    links:
+      - postgresql-master
+      - prometheus
+  grafana:
+    container_name: grafana
+    image: grafana/grafana
+    ports:
+      - 3000:3000
+    volumes:
+      - ./configs/grafana/provisioning/:/etc/grafana/provisioning/
+  prometheus:
+    container_name: prometheus
+    image: prom/prometheus
+    ports:
+      - 9090:9090
+    volumes:
+      - ./configs/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+  demo:
+    container_name: demo
+    depends_on:
+      - postgresql-master
     image: highload-architect-demo
     environment:
-      DB_HOST: postgresql
+      DB_HOST: postgresql-master
       DB_PORT: 5432
       DB_NAME: highload_architect
       DB_SCHEMA: demo
-      DB_USERNAME: architect
+      DB_USERNAME: postgres
       DB_PASSWORD: Passw00rd!
+      DB_REPLICA_URLS: postgresql-replica-1:6433,postgresql-replica-2:6434
+      JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
     ports:
       - "8090:8080"
+      - 5005:5005
+
+networks:
+  highload-architect:
